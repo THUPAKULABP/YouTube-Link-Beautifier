@@ -179,100 +179,101 @@
 
             const getThumbnail = (id) => `https://img.youtube.com/vi/${id}/maxresdefault.jpg`;
 
-            // --- THE INTERACTIVE PLAYER GENERATOR ---
+            // --- THE NEW NATIVE REACT PLAYER (FOR SHARE LINKS & PREVIEW) ---
+            const CinePlayer = ({ id, theme, onThemeChange }) => {
+                const [isPlaying, setIsPlaying] = useState(false);
+                const [currentTheme, setCurrentTheme] = useState(theme);
+                const thumb = getThumbnail(id);
+                const themes = ['ambient', 'neon', 'retro', 'cyber', 'soft', 'cinema', 'clean'];
+
+                useEffect(() => { setCurrentTheme(theme); }, [theme]);
+
+                const toggleTheme = (e) => {
+                    e.stopPropagation();
+                    const currentIndex = themes.indexOf(currentTheme);
+                    const nextTheme = themes[(currentIndex + 1) % themes.length];
+                    setCurrentTheme(nextTheme);
+                    if (onThemeChange) onThemeChange(nextTheme);
+                };
+
+                return (
+                    <div className="w-full flex flex-col items-center">
+                        <style dangerouslySetInnerHTML={{
+                            __html: `
+                            .cine-player-container { width: 100%; max-width: 900px; margin: 0 auto; position: relative; isolation: isolate; }
+                            .cine-player-wrapper { position: relative; width: 100%; aspect-ratio: 16/9; background: #000; overflow: hidden; z-index: 2; transition: all 0.5s ease; }
+                            .cine-player-thumb { position: absolute; inset: 0; background-image: url('${thumb}'); background-size: cover; background-position: center; transition: transform 0.5s ease; cursor: pointer; }
+                            .cine-player-wrapper:hover .cine-player-thumb { transform: scale(1.03); }
+                            .cine-player-play { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); width: 68px; height: 48px; background: rgba(20,20,20,0.8); backdrop-filter: blur(4px); border-radius: 12px; display: flex; align-items: center; justify-content: center; cursor: pointer; transition: all 0.3s; z-index: 10; }
+                            .cine-player-play:hover { background: #f00; transform: translate(-50%, -50%) scale(1.1); box-shadow: 0 0 20px rgba(255,0,0,0.5); }
+                            .cine-player-play svg { width: 16px; height: 16px; fill: white; }
+                            .cine-player-theme-toggle { position: absolute; top: 15px; right: 15px; z-index: 50; width: 32px; height: 32px; background: rgba(0,0,0,0.6); backdrop-filter: blur(8px); border: 1px solid rgba(255,255,255,0.2); border-radius: 50%; display: flex; align-items: center; justify-content: center; cursor: pointer; opacity: 0; transition: opacity 0.3s, transform 0.2s; color: white; }
+                            .cine-player-container:hover .cine-player-theme-toggle { opacity: 1; }
+                            .cine-player-theme-toggle:hover { transform: rotate(15deg) scale(1.1); background: rgba(255,255,255,0.2); }
+                            .cine-player-container[data-theme="ambient"] .cine-player-glow { position: absolute; inset: -20px; background: url('${thumb}'); background-size: cover; filter: blur(45px) brightness(0.7) saturate(1.5); opacity: 0.6; z-index: 1; border-radius: 30px; }
+                            .cine-player-container[data-theme="ambient"] .cine-player-wrapper { border-radius: 16px; box-shadow: 0 20px 50px rgba(0,0,0,0.5); }
+                            .cine-player-container[data-theme="neon"] .cine-player-wrapper { border-radius: 12px; box-shadow: 0 0 10px #0ff, 0 0 20px #0ff, 0 0 40px #0ff; border: 2px solid #0ff; }
+                            .cine-player-container[data-theme="cinema"] { max-width: 100%; background: #111; padding: 40px 0; }
+                            .cine-player-container[data-theme="cinema"] .cine-player-wrapper { aspect-ratio: 2.35/1; border-top: 1px solid #333; border-bottom: 1px solid #333; }
+                            .cine-player-container[data-theme="retro"] .cine-player-wrapper { border: 4px solid #4ade80; box-shadow: 6px 6px 0px #4ade80; border-radius: 0; }
+                            .cine-player-container[data-theme="cyber"] .cine-player-wrapper { clip-path: polygon(10% 0, 100% 0, 100% 85%, 90% 100%, 0 100%, 0 15%); border-right: 2px solid #d946ef; border-left: 2px solid #d946ef; }
+                            .cine-player-container[data-theme="soft"] .cine-player-wrapper { border-radius: 24px; box-shadow: 0 25px 50px -12px rgba(100, 100, 255, 0.25); border: 4px solid rgba(255,255,255,0.1); }
+                            @media (max-width: 600px) { .cine-player-container[data-theme="cinema"] .cine-player-wrapper { aspect-ratio: 16/9; } }
+                        `}} />
+                        <div className="cine-player-container" data-theme={currentTheme}>
+                            <div className="cine-player-glow"></div>
+                            <div className="cine-player-theme-toggle" onClick={toggleTheme} title="Change Theme">
+                                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M12 2v4" /><path d="M12 18v4" /><path d="M4.93 4.93l2.83 2.83" /><path d="M16.24 16.24l2.83 2.83" /><path d="M2 12h4" /><path d="M18 12h4" /><path d="M4.93 19.07l2.83-2.83" /><path d="M16.24 7.76l2.83-2.83" /></svg>
+                            </div>
+                            <div className="cine-player-wrapper">
+                                {!isPlaying ? (
+                                    <>
+                                        <div className="cine-player-thumb" onClick={() => setIsPlaying(true)}></div>
+                                        <div className="cine-player-play" onClick={() => setIsPlaying(true)}>
+                                            <svg viewBox="0 0 24 24"><polygon points="5 3 19 12 5 21 5 3"></polygon></svg>
+                                        </div>
+                                    </>
+                                ) : (
+                                    <iframe
+                                        src={`https://www.youtube.com/embed/${id}?autoplay=1&modestbranding=1&playsinline=1&rel=0`}
+                                        allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                                        allowFullScreen
+                                        className="w-full h-full border-0 absolute top-0 left-0"
+                                    />
+                                )}
+                            </div>
+                        </div>
+                    </div>
+                );
+            };
+
+            // --- THE STATIC PLAYER GENERATOR (FOR EXTERNAL EMBEDS) ---
             const generateEmbed = () => {
                 if (!videoId) return '<!-- Enter a URL to generate code -->';
-
                 const thumb = getThumbnail(videoId);
                 const uniqueId = 'cine-' + Math.random().toString(36).substr(2, 6);
-
-                // CSS for all themes (embedded directly in the output)
                 const styles = `
                     <style>
-                        /* Base Layout */
-                        #${uniqueId} { width: 100%; max-width: 900px; margin: 0 auto; position: relative; font-family: sans-serif; isolation: isolate; }
+                        #${uniqueId} { width: 100%; max-width: 100%; margin: 0 auto; position: relative; font-family: sans-serif; isolation: isolate; }
                         #${uniqueId} .cine-wrapper { position: relative; width: 100%; aspect-ratio: 16/9; background: #000; overflow: hidden; z-index: 2; transition: all 0.5s ease; }
-                        #${uniqueId} .cine-thumb { position: absolute; inset: 0; background-image: url('${thumb}'); background-size: cover; background-position: center; transition: transform 0.5s ease; }
+                        #${uniqueId} .cine-thumb { position: absolute; inset: 0; background-image: url('${thumb}'); background-size: cover; background-position: center; transition: transform 0.5s ease; cursor: pointer; }
                         #${uniqueId} .cine-wrapper:hover .cine-thumb { transform: scale(1.03); }
-                        
-                        /* Play Button */
-                        #${uniqueId} .cine-play { 
-                            position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); 
-                            width: 68px; height: 48px; background: rgba(20,20,20,0.8); backdrop-filter: blur(4px);
-                            border-radius: 12px; display: flex; align-items: center; justify-content: center; 
-                            cursor: pointer; transition: all 0.3s; z-index: 10;
-                        }
+                        #${uniqueId} .cine-play { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); width: 68px; height: 48px; background: rgba(20,20,20,0.8); backdrop-filter: blur(4px); border-radius: 12px; display: flex; align-items: center; justify-content: center; cursor: pointer; transition: all 0.3s; z-index: 10; }
                         #${uniqueId} .cine-play:hover { background: #f00; transform: translate(-50%, -50%) scale(1.1); box-shadow: 0 0 20px rgba(255,0,0,0.5); }
                         #${uniqueId} .cine-play svg { width: 16px; height: 16px; fill: white; }
-
-                        /* Theme Switcher UI */
-                        #${uniqueId} .theme-toggle {
-                            position: absolute; top: 15px; right: 15px; z-index: 50;
-                            width: 32px; height: 32px; background: rgba(0,0,0,0.6); backdrop-filter: blur(8px);
-                            border: 1px solid rgba(255,255,255,0.2); border-radius: 50%;
-                            display: flex; align-items: center; justify-content: center;
-                            cursor: pointer; opacity: 0; transition: opacity 0.3s, transform 0.2s;
-                            color: white;
-                        }
-                        #${uniqueId}:hover .theme-toggle, #${uniqueId}.is-playing .theme-toggle:hover { opacity: 1; }
+                        #${uniqueId} .theme-toggle { position: absolute; top: 15px; right: 15px; z-index: 50; width: 32px; height: 32px; background: rgba(0,0,0,0.6); backdrop-filter: blur(8px); border: 1px solid rgba(255,255,255,0.2); border-radius: 50%; display: flex; align-items: center; justify-content: center; cursor: pointer; opacity: 0; transition: opacity 0.3s, transform 0.2s; color: white; }
+                        #${uniqueId}:hover .theme-toggle { opacity: 1; }
                         #${uniqueId} .theme-toggle:hover { transform: rotate(15deg) scale(1.1); background: rgba(255,255,255,0.2); }
-                        
-                        /* --- THEMES --- */
-                        
-                        /* Ambient */
-                        #${uniqueId}[data-theme="ambient"] .cine-glow {
-                            position: absolute; inset: -20px; background: url('${thumb}'); background-size: cover;
-                            filter: blur(45px) brightness(0.7) saturate(1.5); opacity: 0.6; z-index: 1; border-radius: 30px;
-                        }
+                        #${uniqueId}[data-theme="ambient"] .cine-glow { position: absolute; inset: -20px; background: url('${thumb}'); background-size: cover; filter: blur(45px) brightness(0.7) saturate(1.5); opacity: 0.6; z-index: 1; border-radius: 30px; }
                         #${uniqueId}[data-theme="ambient"] .cine-wrapper { border-radius: 16px; box-shadow: 0 20px 50px rgba(0,0,0,0.5); }
-
-                        /* Neon */
-                        #${uniqueId}[data-theme="neon"] .cine-wrapper {
-                            border-radius: 12px; 
-                            box-shadow: 0 0 10px #0ff, 0 0 20px #0ff, 0 0 40px #0ff;
-                            border: 2px solid #0ff;
-                        }
-                        #${uniqueId}[data-theme="neon"] .cine-play { background: rgba(0,0,0,0.8); border: 1px solid #0ff; color: #0ff; }
-                        #${uniqueId}[data-theme="neon"] .cine-play:hover { background: #0ff; box-shadow: 0 0 20px #0ff; }
-
-                        /* Cinema */
+                        #${uniqueId}[data-theme="neon"] .cine-wrapper { border-radius: 12px; box-shadow: 0 0 10px #0ff, 0 0 20px #0ff, 0 0 40px #0ff; border: 2px solid #0ff; }
                         #${uniqueId}[data-theme="cinema"] { max-width: 100%; background: #111; padding: 40px 0; }
                         #${uniqueId}[data-theme="cinema"] .cine-wrapper { aspect-ratio: 2.35/1; border-top: 1px solid #333; border-bottom: 1px solid #333; }
-                        
-                        /* Retro */
-                        #${uniqueId}[data-theme="retro"] .cine-wrapper {
-                            border: 4px solid #4ade80;
-                            box-shadow: 6px 6px 0px #4ade80;
-                            border-radius: 0;
-                        }
-                        #${uniqueId}[data-theme="retro"] .cine-play { border-radius: 0; background: #000; border: 2px solid #4ade80; }
-                        #${uniqueId}[data-theme="retro"] .cine-play:hover { background: #4ade80; }
-
-                        /* Cyber */
-                        #${uniqueId}[data-theme="cyber"] .cine-wrapper {
-                            clip-path: polygon(10% 0, 100% 0, 100% 85%, 90% 100%, 0 100%, 0 15%);
-                            border-right: 2px solid #d946ef; border-left: 2px solid #d946ef;
-                        }
-                        #${uniqueId}[data-theme="cyber"] .cine-glow {
-                            position: absolute; inset: -5px; background: linear-gradient(45deg, #d946ef, transparent, #3b82f6);
-                            z-index: 1; opacity: 0.5; clip-path: polygon(10% 0, 100% 0, 100% 85%, 90% 100%, 0 100%, 0 15%);
-                        }
-
-                        /* Soft */
-                        #${uniqueId}[data-theme="soft"] .cine-wrapper {
-                            border-radius: 24px;
-                            box-shadow: 0 25px 50px -12px rgba(100, 100, 255, 0.25);
-                            border: 4px solid rgba(255,255,255,0.1);
-                        }
-
-                        /* Mobile overrides */
-                        @media (max-width: 600px) {
-                            #${uniqueId}[data-theme="cinema"] .cine-wrapper { aspect-ratio: 16/9; }
-                        }
+                        #${uniqueId}[data-theme="retro"] .cine-wrapper { border: 4px solid #4ade80; box-shadow: 6px 6px 0px #4ade80; border-radius: 0; }
+                        #${uniqueId}[data-theme="cyber"] .cine-wrapper { clip-path: polygon(10% 0, 100% 0, 100% 85%, 90% 100%, 0 100%, 0 15%); border-right: 2px solid #d946ef; border-left: 2px solid #d946ef; }
+                        #${uniqueId}[data-theme="soft"] .cine-wrapper { border-radius: 24px; box-shadow: 0 25px 50px -12px rgba(100, 100, 255, 0.25); border: 4px solid rgba(255,255,255,0.1); }
                     </style>
                 `;
-
-                // Logic to switch themes inside the embedded player
                 const script = `
                 <script>
                 (function() {
@@ -280,60 +281,23 @@
                     var toggle = c.querySelector('.theme-toggle');
                     var themes = ['ambient', 'neon', 'retro', 'cyber', 'soft', 'cinema', 'clean'];
                     var current = themes.indexOf('${defaultTheme}');
-                    
-                    // Theme Switcher Logic
-                    toggle.addEventListener('click', function(e) {
-                        e.stopPropagation(); // Don't trigger play
-                        current = (current + 1) % themes.length;
-                        c.setAttribute('data-theme', themes[current]);
-                        
-                        // Optional: Show toast name of theme (simplified for embed)
-                        toggle.title = "Theme: " + themes[current];
-                    });
-
-                    // Video Play Logic
+                    toggle.addEventListener('click', function(e) { e.stopPropagation(); current = (current + 1) % themes.length; c.setAttribute('data-theme', themes[current]); });
                     var w = c.querySelector('.cine-wrapper');
                     var p = c.querySelector('.cine-play');
                     var t = c.querySelector('.cine-thumb');
-                    
                     function play() {
-                        c.classList.add('is-playing');
                         var iframe = document.createElement('iframe');
                         iframe.src = 'https://www.youtube.com/embed/${videoId}?autoplay=1&modestbranding=1&playsinline=1&rel=0';
                         iframe.allow = 'accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture';
                         iframe.allowFullscreen = true;
-                        iframe.style.width = '100%';
-                        iframe.style.height = '100%';
-                        iframe.style.border = 'none';
-                        iframe.style.position = 'absolute';
-                        iframe.style.top = '0'; iframe.style.left = '0';
-                        
-                        t.style.opacity = 0;
-                        p.style.display = 'none';
-                        w.appendChild(iframe);
+                        iframe.style.width = '100%'; iframe.style.height = '100%'; iframe.style.border = 'none'; iframe.style.position = 'absolute'; iframe.style.top = '0'; iframe.style.left = '0';
+                        t.style.opacity = 0; p.style.display = 'none'; w.appendChild(iframe);
                     }
-                    
-                    p.addEventListener('click', play);
-                    t.addEventListener('click', play);
+                    p.addEventListener('click', play); t.addEventListener('click', play);
                 })();
                 <\/script>
                 `;
-
-                return `<!-- CineEmbed Interactive Player -->
-${styles}
-<div id="${uniqueId}" data-theme="${defaultTheme}">
-    <div class="cine-glow"></div>
-    <div class="theme-toggle" title="Change Theme">
-        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2v4"/><path d="M12 18v4"/><path d="M4.93 4.93l2.83 2.83"/><path d="M16.24 16.24l2.83 2.83"/><path d="M2 12h4"/><path d="M18 12h4"/><path d="M4.93 19.07l2.83-2.83"/><path d="M16.24 7.76l2.83-2.83"/></svg>
-    </div>
-    <div class="cine-wrapper">
-        <div class="cine-thumb"></div>
-        <div class="cine-play">
-            <svg viewBox="0 0 24 24"><polygon points="5 3 19 12 5 21 5 3"></polygon></svg>
-        </div>
-    </div>
-</div>
-${script}`;
+                return styles + `<div id="${uniqueId}" data-theme="${defaultTheme}"><div class="cine-glow"></div><div class="theme-toggle"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2v4"/><path d="M12 18v4"/><path d="M4.93 4.93l2.83 2.83"/><path d="M16.24 16.24l2.83 2.83"/><path d="M2 12h4"/><path d="M18 12h4"/><path d="M4.93 19.07l2.83-2.83"/><path d="M16.24 7.76l2.83-2.83"/></svg></div><div class="cine-wrapper"><div class="cine-thumb"></div><div class="cine-play"><svg viewBox="0 0 24 24"><polygon points="5 3 19 12 5 21 5 3"></polygon></svg></div></div></div>` + script;
             };
 
             const generateFullPage = () => {
@@ -368,7 +332,7 @@ ${script}`;
                 return (
                     <div className="min-h-screen flex items-center justify-center p-4">
                         <div className="w-full max-w-5xl animate-fade-in" key={previewKey}>
-                            <div dangerouslySetInnerHTML={{ __html: generateEmbed() }} />
+                            <CinePlayer id={videoId} theme={defaultTheme} />
                             <div className="mt-8 flex justify-center">
                                 <a href={window.location.origin + window.location.pathname} className="text-slate-500 hover:text-white text-sm transition-colors flex items-center gap-2">
                                     <Zap className="w-4 h-4" /> Create your own beautified player
@@ -513,7 +477,7 @@ ${script}`;
 
                                         {videoId ? (
                                             <div className="relative z-10 w-full animate-fade-in" key={previewKey}>
-                                                <div dangerouslySetInnerHTML={{ __html: generateEmbed() }} />
+                                                <CinePlayer id={videoId} theme={defaultTheme} onThemeChange={setDefaultTheme} />
                                             </div>
                                         ) : (
                                             <div className="text-center relative z-10">
